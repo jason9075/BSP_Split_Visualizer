@@ -1,29 +1,39 @@
 from bsp import BSP
 from dto import Point, Segment
-from visualizer import animate_bsp_build, draw_bsp_tree
+from visualizer import Visualizer
 
 
 def load_segments_from_file(filename: str):
     segments = []
+    idx = 0
     with open(filename, "r", encoding="utf-8") as f:
         for line in f:
             if line.strip().startswith("#") or not line.strip():
                 continue
             x1, y1, x2, y2 = map(float, line.strip().split())
-            seg = Segment(Point(x1, y1), Point(x2, y2))
+            seg = Segment(Point(x1, y1), Point(x2, y2), seg_id=str(idx))
             segments.append(seg)
+            idx += 1
     return segments
 
 
 def main():
     segments = load_segments_from_file("files/test.txt")
+
     bsp = BSP(segments)
     bsp.build()
-
-    animate_bsp_build(segments, bsp.steps)
-
     positions, indices = bsp.layout_bsp_tree(bsp.root)
-    draw_bsp_tree(bsp.root, positions, indices)
+    print("Positions:", positions)
+
+    # Visualize the segments and the BSP tree
+    visualizer = Visualizer(segments)
+    # visualizer.animate_split(bsp.steps)
+    visualizer.draw_bsp_tree(bsp.root, positions, indices)
+
+    player_loc = Point(1.4, 1.6)
+    visualizer.draw_same_sector(player_loc, bsp.root)
+
+    visualizer.show()
 
 
 if __name__ == "__main__":

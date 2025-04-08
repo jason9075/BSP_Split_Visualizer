@@ -11,12 +11,13 @@ class Point:
 
 
 class Segment:
-    def __init__(self, start: Point, end: Point):
+    def __init__(self, start: Point, end: Point, seg_id: str = "no_id"):
+        self.seg_id = seg_id
         self.start = start
         self.end = end
 
     def __repr__(self):
-        return f"Segment({self.start}, {self.end})"
+        return f"Segment({self.seg_id}, {self.start}, {self.end})"
 
     def __str__(self):
-        return f"Segment({self.start}, {self.end})"
+        return f"Segment({self.seg_id}, {self.start}, {self.end})"

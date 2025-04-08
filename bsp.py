@@ -1,5 +1,6 @@
-from typing import List, Union, Optional
+from typing import Union, Optional
 from dto import Segment, Point
+from utils import classify_and_split
 
 
 class BSPNode:
@@ -25,7 +26,7 @@ class BSPNode:
 
 
 class BSPLeaf:
-    def __init__(self, segments: List[Segment]):
+    def __init__(self, segments: list[Segment]):
         self.segments = segments
 
     def __repr__(self):
@@ -36,7 +37,7 @@ class BSPLeaf:
 
 
 class BSP:
-    def __init__(self, segments: List[Segment], max_depth: int = 20):
+    def __init__(self, segments: list[Segment], max_depth: int = 20):
         self.segments = segments
         self.steps = []  # used for animation
         self.max_depth = max_depth
@@ -45,7 +46,7 @@ class BSP:
     def build(self):
         self.root = self._build_bsp(self.segments, 0)
 
-    def _build_bsp(self, segments: List[Segment], depth: int):
+    def _build_bsp(self, segments: list[Segment], depth: int):
         """
         segments: wall segments
         steps: used for animation
@@ -63,7 +64,7 @@ class BSP:
         for seg in segments:
             if seg == partition:
                 continue
-            result = self._classify_and_split(seg, partition)
+            result = classify_and_split(seg, partition)
             if result == "front":
                 front.append(seg)
             elif result == "back":
@@ -81,29 +82,13 @@ class BSP:
             back=self._build_bsp(back, depth + 1),
         )
 
-    def _choose_partition_line(self, segments: List[Segment]):
+    def _choose_partition_line(self, segments: list[Segment]) -> Segment:
         # simple heuristic: choose the first segment as the partition line
         return segments[0]
 
-    def _classify_and_split(self, seg: Segment, partition: Segment):
-        """will return "front", "back", or "split" """
-        side1 = self._point_side(seg.start, partition)
-        side2 = self._point_side(seg.end, partition)
-
-        if side1 >= 0 and side2 >= 0:
-            return "front"
-        if side1 <= 0 and side2 <= 0:
-            return "back"
-        return "split"
-
-    def _point_side(self, point: Point, partition: Segment):
-        """判斷點在 partition 的哪一側"""
-        p1, p2 = partition.start, partition.end
-        (x, y) = point.x, point.y
-        # use cross product to determine the side
-        return (p2.x - p1.x) * (y - p1.y) - (p2.y - p1.y) * (x - p1.x)
-
-    def _split_segment(self, seg: Segment, partition: Segment):
+    def _split_segment(
+        self, seg: Segment, partition: Segment
+    ) -> tuple[Segment, Optional[Segment]]:
         """將 seg 依照 partition 分割為兩段"""
         s1, s2 = seg.start, seg.end
         p1, p2 = partition.start, partition.end
@@ -140,7 +125,7 @@ class BSP:
         counter=None,
         node_indices=None,
         current_index=None,
-    ):
+    ) -> tuple[dict, dict]:
         """
         Recursively assign positions and indices to each node.
         """
