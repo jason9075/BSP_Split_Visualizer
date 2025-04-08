@@ -22,8 +22,10 @@ def main():
 
     bsp = BSP(segments)
     bsp.build()
+    print("root front:", bsp.root.front.front)
     positions, indices = bsp.layout_bsp_tree(bsp.root)
-    print("Positions:", positions)
+    # print("Positions:", positions)
+    # print("Indices:", indices)
 
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
@@ -31,7 +33,7 @@ def main():
     visualizer.draw_bsp_tree(bsp.root, positions, indices)
 
     player_loc = Point(1.4, 1.6)
-    visualizer.draw_same_sector(player_loc, bsp.root)
+    # visualizer.draw_same_sector(player_loc, bsp.root)
 
     visualizer.show()
 

@@ -2,8 +2,7 @@ import matplotlib
 
 matplotlib.use("TkAgg")
 
-from typing import List
-from bsp import BSPNode, BSPLeaf
+from bsp import BSPLeaf
 from dto import Segment, Point
 from matplotlib import animation
 from utils import point_side
@@ -13,11 +12,11 @@ import matplotlib.pyplot as plt
 
 
 class Visualizer:
-    def __init__(self, segments: List[Segment]):
+    def __init__(self, segments: list[Segment]):
         self.segments = segments
         self.anim = None
 
-    def animate_split(self, steps: List[Segment]):
+    def animate_split(self, steps: list[Segment]):
         fig, ax = self._create_figure("BSP Partition Build Animation")
         self._draw_segments(ax, self.segments, color="lightgray")
 
@@ -74,7 +73,6 @@ class Visualizer:
 
         # Find the player location in the segments
 
-        print(root)
         same_segments = []
 
     def show(self):
@@ -90,7 +88,7 @@ class Visualizer:
         ax.grid(False)
         return fig, ax
 
-    def _draw_segments(self, ax, segments: List[Segment], color="black"):
+    def _draw_segments(self, ax, segments: list[Segment], color="black"):
         for seg in segments:
             self._draw_segment(ax, seg, color)
 
@@ -105,10 +103,13 @@ class Visualizer:
 
         if isinstance(node, BSPLeaf):
             ax.plot(x, y, "o", color="gray")
+            list_segments = ""
+            for seg in node.segments:
+                list_segments += f"{seg.seg_id}: {seg.start}→{seg.end}\n"
             ax.text(
                 x,
                 y,
-                f"Leaf\n{len(node.segments)}",
+                f"{node.side}\n{list_segments}",
                 ha="center",
                 va="bottom",
                 fontsize=8,
@@ -119,7 +120,7 @@ class Visualizer:
             ax.text(
                 x,
                 y,
-                f"#{index}\n({p1.x:.1f},{p1.y:.1f})→({p2.x:.1f},{p2.y:.1f})",
+                f"#{index}: ({p1.x:.1f},{p1.y:.1f})→({p2.x:.1f},{p2.y:.1f})",
                 ha="center",
                 va="bottom",
                 fontsize=8,

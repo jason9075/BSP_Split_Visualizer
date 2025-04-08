@@ -9,31 +9,32 @@ class BSPNode:
         partition: Segment,
         front: Optional[Union["BSPNode", "BSPLeaf"]],
         back=Optional[Union["BSPNode", "BSPLeaf"]],
+        seg_front: Optional[list[Segment]] = None,
+        seg_back: Optional[list[Segment]] = None,
     ):
         self.partition = partition  # wall line
         self.front = front  # BSPNode or Leaf
         self.back = back
+        self.seg_front = seg_front if seg_front is not None else []
+        self.seg_back = seg_back if seg_back is not None else []
 
     def __repr__(self):
-        return (
-            f"BSPNode(partition={self.partition}, front={self.front}, back={self.back})"
-        )
+        return f"BSPNode(partition={self.partition}, front={self.seg_front}, back={self.seg_back})"
 
     def __str__(self):
-        return (
-            f"BSPNode(partition={self.partition}, front={self.front}, back={self.back})"
-        )
+        return f"BSPNode(partition={self.partition}, front={self.seg_front}, back={self.seg_back})"
 
 
 class BSPLeaf:
-    def __init__(self, segments: list[Segment]):
+    def __init__(self, segments: list[Segment], side: Optional[str] = None):
         self.segments = segments
+        self.side = side  # "front" or "back"
 
     def __repr__(self):
-        return f"BSPLeaf(segments={self.segments})"
+        return f"BSPLeaf(segments={self.segments}, side={self.side})"
 
     def __str__(self):
-        return f"BSPLeaf(segments={self.segments})"
+        return f"BSPLeaf(segments={self.segments}, side={self.side})"
 
 
 class BSP:
@@ -46,7 +47,9 @@ class BSP:
     def build(self):
         self.root = self._build_bsp(self.segments, 0)
 
-    def _build_bsp(self, segments: list[Segment], depth: int):
+    def _build_bsp(
+        self, segments: list[Segment], depth: int, side: Optional[str] = None
+    ):
         """
         segments: wall segments
         steps: used for animation
@@ -54,7 +57,7 @@ class BSP:
         max_depth: max depth of recursion
         """
         if len(segments) <= 1 or depth >= self.max_depth:
-            return BSPLeaf(segments)
+            return BSPLeaf(segments, side)
 
         partition = self._choose_partition_line(segments)
         self.steps.append(partition)
@@ -78,8 +81,10 @@ class BSP:
 
         return BSPNode(
             partition=partition,
-            front=self._build_bsp(front, depth + 1),
-            back=self._build_bsp(back, depth + 1),
+            front=self._build_bsp(front, depth + 1, side="front"),
+            back=self._build_bsp(back, depth + 1, side="back"),
+            seg_front=front,
+            seg_back=back,
         )
 
     def _choose_partition_line(self, segments: list[Segment]) -> Segment:
@@ -89,30 +94,36 @@ class BSP:
     def _split_segment(
         self, seg: Segment, partition: Segment
     ) -> tuple[Segment, Optional[Segment]]:
-        """將 seg 依照 partition 分割為兩段"""
+        """
+        Split a segment by a partition line. Will return two segments if split,
+        otherwise return the original segment and None. The first segment is
+        front of the partition line, the second is back.
+        """
         s1, s2 = seg.start, seg.end
         p1, p2 = partition.start, partition.end
 
-        dx1 = s2.x - s1.x
-        dy1 = s2.y - s2.y
-        dx2 = p2.x - p1.x
-        dy2 = p2.y - p1.y
+        dsx, dsy = s2.x - s1.x, s2.y - s2.y  # vector of segment
+        dpx, dpy = p2.x - p1.x, p2.y - p1.y  # vector of partition line
 
-        denom = dx1 * dy2 - dy1 * dx2
+        # calculate the determinant
+        denom = dsx * dpy - dsy * dpx
         if denom == 0:
             # parallel lines, no intersection
             return seg, None
 
         # calculate intersection point
-        t = ((p1.x - s1.x) * dy2 - (p1.y - s1.y) * dx2) / denom
-        ix = s1.x + t * dx1
-        iy = s1.y + t * dy1
+        t = ((p1.x - s1.x) * dpy - (p1.y - s1.y) * dpx) / denom
+        ix = s1.x + t * dsx
+        iy = s1.y + t * dsy
 
         if (ix, iy) == (s1.x, s1.y) or (ix, iy) == (s2.x, s2.y):
             # no split, return original segment
             return seg, None
 
-        return Segment(s1, Point(ix, iy)), Segment(Point(ix, iy), s2)
+        return (
+            Segment(s1, Point(ix, iy), seg_id=f"{seg.seg_id}-f"),
+            Segment(Point(ix, iy), s2, seg_id=f"{seg.seg_id}-b"),
+        )
 
     def layout_bsp_tree(
         self,

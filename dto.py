@@ -4,10 +4,10 @@ class Point:
         self.y = y
 
     def __repr__(self):
-        return f"Point({self.x}, {self.y})"
+        return f"({self.x}, {self.y})"
 
     def __str__(self):
-        return f"Point({self.x}, {self.y})"
+        return f"({self.x}, {self.y})"
 
 
 class Segment:
