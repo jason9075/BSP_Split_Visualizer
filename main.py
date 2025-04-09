@@ -22,15 +22,15 @@ def main():
 
     bsp = BSP(segments)
     bsp.build()
-    print("root front:", bsp.root.front.front)
-    positions, indices = bsp.layout_bsp_tree(bsp.root)
+    print("root front:", bsp.root.front.front.front)
+    positions = bsp.layout_bsp_tree(bsp.root)
     # print("Positions:", positions)
     # print("Indices:", indices)
 
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
     # visualizer.animate_split(bsp.steps)
-    visualizer.draw_bsp_tree(bsp.root, positions, indices)
+    visualizer.draw_bsp_tree(bsp.root, positions)
 
     player_loc = Point(1.4, 1.6)
     # visualizer.draw_same_sector(player_loc, bsp.root)
@@ -39,5 +39,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("Starting BSP segmentation...")
+    print(">>>>> Starting BSP segmentation...")
     main()

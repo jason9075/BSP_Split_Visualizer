@@ -121,8 +121,8 @@ class BSP:
             return seg, None
 
         return (
-            Segment(s1, Point(ix, iy), seg_id=f"{seg.seg_id}-f"),
-            Segment(Point(ix, iy), s2, seg_id=f"{seg.seg_id}-b"),
+            Segment(s1, Point(ix, iy), seg_id=f"{seg.seg_id}/{partition.seg_id}-f"),
+            Segment(Point(ix, iy), s2, seg_id=f"{seg.seg_id}/{partition.seg_id}-b"),
         )
 
     def layout_bsp_tree(
@@ -134,9 +134,7 @@ class BSP:
         x_gap: float = 1.0,
         positions=None,
         counter=None,
-        node_indices=None,
-        current_index=None,
-    ) -> tuple[dict, dict]:
+    ) -> dict:
         """
         Recursively assign positions and indices to each node.
         """
@@ -144,20 +142,12 @@ class BSP:
             positions = {}
         if counter is None:
             counter = [0.0]  # mutable counter to track x-position
-        if node_indices is None:
-            node_indices = {}
-        if current_index is None:
-            current_index = [0]
 
         if isinstance(node, BSPLeaf):
             positions[id(node)] = (counter[0], y)
-            node_indices[id(node)] = None  # Leaf has no index
             counter[0] += x_gap
-            return positions, node_indices
+            return positions 
 
-        # Assign index to node
-        node_indices[id(node)] = current_index[0]
-        current_index[0] += 1
 
         # Recurse on children
         self.layout_bsp_tree(
@@ -167,9 +157,7 @@ class BSP:
             level_gap,
             x_gap,
             positions,
-            counter,
-            node_indices,
-            current_index,
+            counter
         )
         node_x = counter[0]
         positions[id(node)] = (node_x, y)
@@ -182,8 +170,6 @@ class BSP:
             x_gap,
             positions,
             counter,
-            node_indices,
-            current_index,
         )
 
-        return positions, node_indices
+        return positions
