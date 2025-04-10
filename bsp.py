@@ -1,6 +1,7 @@
 from typing import Union, Optional
 from dto import Segment, Point
 from utils import classify_and_split
+import tqdm
 
 
 class BSPNode:
@@ -46,6 +47,7 @@ class BSP:
         self.max_depth = max_depth
         self.min_segments = min_segments
         self.root = None
+        self.depth = 0
 
     def build(self):
         self.root = self._build_bsp(self.segments, 0)
@@ -60,6 +62,7 @@ class BSP:
         max_depth: max depth of recursion
         """
         if len(segments) <= self.min_segments or depth >= self.max_depth:
+            self.depth = depth
             return BSPLeaf(segments, side)
 
         partition = self._choose_partition_line(segments)
@@ -97,7 +100,7 @@ class BSP:
         # more complex heuristic: choose the longest segment as the partition line
         partition = segments[0]
         best_split_score = 999999
-        for _, candi in enumerate(segments):
+        for candi in tqdm.tqdm(segments, desc="Choosing partition line", unit="candi"):
             score = 0
             front_count = 0
             back_count = 0
@@ -130,12 +133,14 @@ class BSP:
         s1, s2 = seg.start, seg.end
         p1, p2 = partition.start, partition.end
 
-        dsx, dsy = s2.x - s1.x, s2.y - s2.y  # vector of segment
+        dsx, dsy = s2.x - s1.x, s2.y - s1.y  # vector of segment
         dpx, dpy = p2.x - p1.x, p2.y - p1.y  # vector of partition line
+
+        epsilon = 1e-6
 
         # calculate the determinant
         denom = dsx * dpy - dsy * dpx
-        if denom == 0:
+        if abs(denom) < epsilon:
             # parallel lines, no intersection
             return seg, None
 
@@ -144,8 +149,10 @@ class BSP:
         ix = s1.x + t * dsx
         iy = s1.y + t * dsy
 
-        if (ix, iy) == (s1.x, s1.y) or (ix, iy) == (s2.x, s2.y):
-            # no split, return original segment
+        # no split, return original segment
+        if abs(ix - s1.x) < epsilon and abs(iy - s1.y) < epsilon:
+            return seg, None
+        if abs(ix - s2.x) < epsilon and abs(iy - s2.y) < epsilon:
             return seg, None
 
         return (

@@ -1,1 +1,3 @@
 matplotlib
+bsp_tool
+tqdm

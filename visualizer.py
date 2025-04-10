@@ -14,9 +14,9 @@ class Visualizer:
     def __init__(self, segments: list[Segment]):
         self.segments = segments
         self.anim = None
-        self.node_idx = 0
+        self.color_idx = 0
 
-    def animate_split(self, steps: list[Segment]):
+    def animate_split(self, steps: list[Segment], interval: int = 800):
         fig, ax = self._create_figure("Partition Line Animation")
         self._draw_segments(ax, self.segments, color="lightgray")
 
@@ -44,18 +44,18 @@ class Visualizer:
             update,
             init_func=init,
             frames=len(steps),
-            interval=800,
+            interval=interval,
             blit=True,
             repeat=False,
         )
 
     def draw_bsp_tree(self, node, positions, depth=0, show_text=False):
         fig, ax = self._create_figure("BSP Tree Structure")
-        self.node_idx = 0
+        self.color_idx = 0
         self._draw_bsp_tree_node(ax, node, positions, show_text, depth)
         ax.invert_yaxis()  # Root at top
 
-    def draw_same_sector(self, player_loc: Point, root):
+    def render_sectors(self, player_loc: Point, root):
         """draw the same segments with the same color"""
         fig, ax = self._create_figure("Same Sector")
 
@@ -73,8 +73,12 @@ class Visualizer:
         )
 
         # Find the player location in the segments
+        self.color_idx = 0
+        self._render_bsp_sectors(ax, root)
 
-        same_segments = []
+    def render_map(self):
+        fig, ax = self._create_figure("Map")
+        self._draw_segments(ax, self.segments, color="lightgray")
 
     def show(self):
         plt.show()
@@ -88,6 +92,20 @@ class Visualizer:
         ax.axis("off")
         ax.grid(False)
         return fig, ax
+
+    def _render_bsp_sectors(self, ax, node):
+        if isinstance(node, BSPLeaf):
+            self._draw_segments(ax, node.segments, color=f"C{self.color_idx % 10}")
+            self.color_idx += 1
+            return
+
+        # Draw the partition line
+        self._draw_segment(ax, node.partition, color=f"C{self.color_idx % 10}")
+        self.color_idx += 1
+
+        # Recursively draw the front and back nodes
+        self._render_bsp_sectors(ax, node.front)
+        self._render_bsp_sectors(ax, node.back)
 
     def _draw_segments(self, ax, segments: list[Segment], color="black"):
         for seg in segments:
@@ -116,8 +134,8 @@ class Visualizer:
                 fontsize=8,
             )
         else:  # BSPNode
-            ax.plot(x, y, "s", color=f"C{self.node_idx % 10}", markersize=12)
-            self.node_idx += 1
+            ax.plot(x, y, "s", color=f"C{self.color_idx % 10}", markersize=12)
+            self.color_idx += 1
             (p1, p2) = node.partition.start, node.partition.end
             pline = f"#{node.partition.seg_id}: ({p1.x:.1f},{p1.y:.1f})→({p2.x:.1f},{p2.y:.1f})"
             front_segments = ""

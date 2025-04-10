@@ -175,3 +175,4 @@ cython_debug/
 
 files/**
 !files/test.txt
+!files/de_dust2.txt

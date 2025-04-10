@@ -11,6 +11,10 @@ def load_segments_from_file(filename: str):
             if line.strip().startswith("#") or not line.strip():
                 continue
             x1, y1, x2, y2 = map(float, line.strip().split())
+            # force line is left to right and up to down
+            if (x1 > x2) or (x1 == x2 and y1 > y2):
+                x1, y1, x2, y2 = x2, y2, x1, y1
+
             seg = Segment(Point(x1, y1), Point(x2, y2), seg_id=str(idx))
             segments.append(seg)
             idx += 1
@@ -18,22 +22,24 @@ def load_segments_from_file(filename: str):
 
 
 def main():
-    segments = load_segments_from_file("files/test.txt")
-
-    bsp = BSP(segments, max_depth=20, min_segments=2)
-    bsp.build()
-    # print("root front:", bsp.root.front.front.front)
-    positions = bsp.layout_bsp_tree(bsp.root)
-    # print("Positions:", positions)
-    # print("Indices:", indices)
+    # segments = load_segments_from_file("files/test.txt")
+    segments = load_segments_from_file("files/de_dust2.txt")
 
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
-    visualizer.animate_split(bsp.steps)
-    visualizer.draw_bsp_tree(bsp.root, positions)
 
-    player_loc = Point(1.4, 1.6)
-    # visualizer.draw_same_sector(player_loc, bsp.root)
+    visualizer.render_map()
+
+    # bsp = BSP(segments, max_depth=20, min_segments=10)
+    # bsp.build()
+
+    # visualizer.animate_split(bsp.steps, interval=100)
+
+    # positions = bsp.layout_bsp_tree(bsp.root)
+    # visualizer.draw_bsp_tree(bsp.root, positions, show_text=False)
+
+    # player_loc = Point(1.4, 1.6)
+    # visualizer.render_sectors(player_loc, bsp.root)
 
     visualizer.show()
 

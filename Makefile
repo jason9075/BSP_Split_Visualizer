@@ -9,6 +9,9 @@ run:
 dev:
 	@fd . | entr -r sh -c 'python main.py'
 
+.PHONY: convert
+convert:
+	@fd . | entr -r sh -c 'python convert.py'
 
 .PHONY: clean
 clean:
