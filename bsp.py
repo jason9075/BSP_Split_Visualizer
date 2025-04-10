@@ -49,11 +49,15 @@ class BSP:
         self.root = None
         self.depth = 0
 
-    def build(self):
-        self.root = self._build_bsp(self.segments, 0)
+    def build(self, method: str = "score"):
+        self.root = self._build_bsp(self.segments, 0, method=method)
 
     def _build_bsp(
-        self, segments: list[Segment], depth: int, side: Optional[str] = None
+        self,
+        segments: list[Segment],
+        depth: int,
+        side: Optional[str] = None,
+        method: str = "score",
     ):
         """
         segments: wall segments
@@ -65,7 +69,7 @@ class BSP:
             self.depth = depth
             return BSPLeaf(segments, side)
 
-        partition = self._choose_partition_line(segments)
+        partition = self._choose_partition_line(segments, method=method)
         self.steps.append(partition)
 
         front, back = [], []
@@ -93,34 +97,42 @@ class BSP:
             seg_back=back,
         )
 
-    def _choose_partition_line(self, segments: list[Segment]) -> Segment:
+    def _choose_partition_line(
+        self, segments: list[Segment], method: str = "score"
+    ) -> Segment:
         # simple heuristic: choose the first segment as the partition line
-        # return segments[0]
+        if method == "simple":
+            return segments[0]
 
         # more complex heuristic: choose the longest segment as the partition line
-        partition = segments[0]
-        best_split_score = 999999
-        for candi in tqdm.tqdm(segments, desc="Choosing partition line", unit="candi"):
-            score = 0
-            front_count = 0
-            back_count = 0
-            for seg in segments:
-                if seg == candi:
-                    continue
-                result = classify_and_split(seg, candi)
-                if result == "split":
-                    score += 1
-                elif result == "front":
-                    front_count += 1
-                elif result == "back":
-                    back_count += 1
-            score += abs(front_count - back_count)  # balance
+        if method == "score":
+            partition = segments[0]
+            best_split_score = 999999
+            for candi in tqdm.tqdm(
+                segments, desc="Choosing partition line", unit="candi"
+            ):
+                score = 0
+                front_count = 0
+                back_count = 0
+                for seg in segments:
+                    if seg == candi:
+                        continue
+                    result = classify_and_split(seg, candi)
+                    if result == "split":
+                        score += 1
+                    elif result == "front":
+                        front_count += 1
+                    elif result == "back":
+                        back_count += 1
+                score += abs(front_count - back_count)  # balance
 
-            if score < best_split_score:
-                best_split_score = score
-                partition = candi
+                if score < best_split_score:
+                    best_split_score = score
+                    partition = candi
 
-        return partition
+            return partition
+
+        raise ValueError(f"Unknown partition method: {method}")
 
     def _split_segment(
         self, seg: Segment, partition: Segment

@@ -28,17 +28,17 @@ def main():
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
 
-    visualizer.render_map()
+    # visualizer.render_map()
 
-    # bsp = BSP(segments, max_depth=20, min_segments=10)
-    # bsp.build()
+    bsp = BSP(segments, max_depth=20, min_segments=10)
+    bsp.build(method="score")
 
-    # visualizer.animate_split(bsp.steps, interval=100)
+    visualizer.animate_split(bsp.steps, interval=100)
 
     # positions = bsp.layout_bsp_tree(bsp.root)
     # visualizer.draw_bsp_tree(bsp.root, positions, show_text=False)
 
-    # player_loc = Point(1.4, 1.6)
+    player_loc = Point(1.4, 1.6)
     # visualizer.render_sectors(player_loc, bsp.root)
 
     visualizer.show()
