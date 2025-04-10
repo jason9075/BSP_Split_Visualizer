@@ -38,10 +38,13 @@ class BSPLeaf:
 
 
 class BSP:
-    def __init__(self, segments: list[Segment], max_depth: int = 20):
+    def __init__(
+        self, segments: list[Segment], max_depth: int = 20, min_segments: int = 2
+    ):
         self.segments = segments
         self.steps = []  # used for animation
         self.max_depth = max_depth
+        self.min_segments = min_segments
         self.root = None
 
     def build(self):
@@ -56,7 +59,7 @@ class BSP:
         depth: current depth of recursion
         max_depth: max depth of recursion
         """
-        if len(segments) <= 1 or depth >= self.max_depth:
+        if len(segments) <= self.min_segments or depth >= self.max_depth:
             return BSPLeaf(segments, side)
 
         partition = self._choose_partition_line(segments)
@@ -89,7 +92,32 @@ class BSP:
 
     def _choose_partition_line(self, segments: list[Segment]) -> Segment:
         # simple heuristic: choose the first segment as the partition line
-        return segments[0]
+        # return segments[0]
+
+        # more complex heuristic: choose the longest segment as the partition line
+        partition = segments[0]
+        best_split_score = 999999
+        for _, candi in enumerate(segments):
+            score = 0
+            front_count = 0
+            back_count = 0
+            for seg in segments:
+                if seg == candi:
+                    continue
+                result = classify_and_split(seg, candi)
+                if result == "split":
+                    score += 1
+                elif result == "front":
+                    front_count += 1
+                elif result == "back":
+                    back_count += 1
+            score += abs(front_count - back_count)  # balance
+
+            if score < best_split_score:
+                best_split_score = score
+                partition = candi
+
+        return partition
 
     def _split_segment(
         self, seg: Segment, partition: Segment
@@ -146,18 +174,11 @@ class BSP:
         if isinstance(node, BSPLeaf):
             positions[id(node)] = (counter[0], y)
             counter[0] += x_gap
-            return positions 
-
+            return positions
 
         # Recurse on children
         self.layout_bsp_tree(
-            node.front,
-            x,
-            y + level_gap,
-            level_gap,
-            x_gap,
-            positions,
-            counter
+            node.front, x, y + level_gap, level_gap, x_gap, positions, counter
         )
         node_x = counter[0]
         positions[id(node)] = (node_x, y)

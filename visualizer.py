@@ -5,7 +5,6 @@ matplotlib.use("TkAgg")
 from bsp import BSPLeaf
 from dto import Segment, Point
 from matplotlib import animation
-from utils import point_side
 
 
 import matplotlib.pyplot as plt
@@ -15,9 +14,10 @@ class Visualizer:
     def __init__(self, segments: list[Segment]):
         self.segments = segments
         self.anim = None
+        self.node_idx = 0
 
     def animate_split(self, steps: list[Segment]):
-        fig, ax = self._create_figure("BSP Partition Build Animation")
+        fig, ax = self._create_figure("Partition Line Animation")
         self._draw_segments(ax, self.segments, color="lightgray")
 
         partition_lines = []
@@ -49,9 +49,10 @@ class Visualizer:
             repeat=False,
         )
 
-    def draw_bsp_tree(self, node, positions, depth=0):
+    def draw_bsp_tree(self, node, positions, depth=0, show_text=False):
         fig, ax = self._create_figure("BSP Tree Structure")
-        self._draw_bsp_tree_node(ax, node, positions, depth)
+        self.node_idx = 0
+        self._draw_bsp_tree_node(ax, node, positions, show_text, depth)
         ax.invert_yaxis()  # Root at top
 
     def draw_same_sector(self, player_loc: Point, root):
@@ -96,7 +97,7 @@ class Visualizer:
         s1, s2 = seg.start, seg.end
         ax.plot([s1.x, s2.x], [s1.y, s2.y], color=color)
 
-    def _draw_bsp_tree_node(self, ax, node, positions, depth=0):
+    def _draw_bsp_tree_node(self, ax, node, positions, show_text=False, depth=0):
         node_id = id(node)
         x, y = positions[node_id]
 
@@ -105,27 +106,33 @@ class Visualizer:
             list_segments = ""
             for seg in node.segments:
                 list_segments += f"{seg.seg_id}: {seg.start}→{seg.end}\n"
+            text = f"{node.side}\n{list_segments}" if show_text else ""
             ax.text(
                 x,
                 y,
-                f"{node.side}\n{list_segments}",
+                text,
                 ha="center",
                 va="bottom",
                 fontsize=8,
             )
         else:  # BSPNode
-            ax.plot(x, y, "s", color=f"C{depth % 10}")
+            ax.plot(x, y, "s", color=f"C{self.node_idx % 10}", markersize=12)
+            self.node_idx += 1
             (p1, p2) = node.partition.start, node.partition.end
+            pline = f"#{node.partition.seg_id}: ({p1.x:.1f},{p1.y:.1f})→({p2.x:.1f},{p2.y:.1f})"
             front_segments = ""
             for seg in node.seg_front:
                 front_segments += f"{seg.seg_id}: {seg.start}→{seg.end}\n"
             back_segments = ""
             for seg in node.seg_back:
                 back_segments += f"{seg.seg_id}: {seg.start}→{seg.end}\n"
+            text = (
+                f"{pline}\nF:\n{front_segments}B:\n{back_segments}" if show_text else ""
+            )
             ax.text(
                 x,
                 y,
-                f"#{node.partition.seg_id}: ({p1.x:.1f},{p1.y:.1f})→({p2.x:.1f},{p2.y:.1f})\nF:\n{front_segments}B:\n{back_segments}",
+                text,
                 ha="center",
                 va="bottom",
                 fontsize=8,
@@ -135,7 +142,7 @@ class Visualizer:
                 child_id = id(child)
                 cx, cy = positions[child_id]
                 ax.plot([x, cx], [y, cy], "k-", linewidth=0.8)
-                self._draw_bsp_tree_node(ax, child, positions, depth + 1)
+                self._draw_bsp_tree_node(ax, child, positions, show_text, depth + 1)
 
     def _visualize_bsp(self, node, ax, depth=0):
         if isinstance(node, BSPLeaf):

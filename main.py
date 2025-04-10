@@ -20,16 +20,16 @@ def load_segments_from_file(filename: str):
 def main():
     segments = load_segments_from_file("files/test.txt")
 
-    bsp = BSP(segments)
+    bsp = BSP(segments, max_depth=20, min_segments=2)
     bsp.build()
-    print("root front:", bsp.root.front.front.front)
+    # print("root front:", bsp.root.front.front.front)
     positions = bsp.layout_bsp_tree(bsp.root)
     # print("Positions:", positions)
     # print("Indices:", indices)
 
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
-    # visualizer.animate_split(bsp.steps)
+    visualizer.animate_split(bsp.steps)
     visualizer.draw_bsp_tree(bsp.root, positions)
 
     player_loc = Point(1.4, 1.6)
