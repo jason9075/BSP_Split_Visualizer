@@ -23,17 +23,18 @@ def load_segments_from_file(filename: str):
 
 def main():
     # segments = load_segments_from_file("files/test.txt")
-    segments = load_segments_from_file("files/de_dust2.txt")
+    # segments = load_segments_from_file("files/de_dust2.txt")
+    segments = load_segments_from_file("files/e1m1.txt")
 
     # Visualize the segments and the BSP tree
     visualizer = Visualizer(segments)
 
-    # visualizer.render_map()
+    visualizer.render_map()
 
-    bsp = BSP(segments, max_depth=20, min_segments=10)
-    bsp.build(method="score")
+    # bsp = BSP(segments, max_depth=20, min_segments=10)
+    # bsp.build(method="score")
 
-    visualizer.animate_split(bsp.steps, interval=100)
+    # visualizer.animate_split(bsp.steps, interval=100)
 
     # positions = bsp.layout_bsp_tree(bsp.root)
     # visualizer.draw_bsp_tree(bsp.root, positions, show_text=False)
